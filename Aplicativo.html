@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<html lang="pt-MZ">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aplicativo MERN Full-Stack</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f8ff; }
+  header { background: #0077b6; color: #fff; padding: 1.5rem; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+  main { padding: 1rem; max-width: 900px; margin: auto; }
+  form { background: #caf0f8; padding: 1rem; margin-bottom: 1rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  input, textarea { width: 100%; padding: 0.5rem; margin-bottom: 0.5rem; border-radius: 5px; border: 1px solid #90e0ef; }
+  button { padding: 0.5rem 1rem; margin-top: 0.25rem; border: none; border-radius: 5px; cursor: pointer; background: #0077b6; color: #fff; transition: 0.2s; }
+  button:hover { background: #023e8a; }
+  .post { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  .post img { max-width: 100%; border-radius: 5px; margin-top: 0.5rem; }
+  .comments { margin-top: 1rem; padding-left: 1rem; border-left: 3px solid #0077b6; }
+  .comments h3 { color: #0077b6; }
+  .comments input { margin-top: 0.25rem; border: 1px solid #90e0ef; }
+  .comments button { background: #00b4d8; }
+  .comments button:hover { background: #0096c7; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Aplicativo MERN Full-Stack</h1>
+</header>
+
+<main>
+  <!-- Formulário de criação de post -->
+  <form id="postForm">
+    <input type="text" id="title" placeholder="Título do post" required>
+    <textarea id="content" placeholder="Conteúdo do post" rows="4" required></textarea>
+    <input type="text" id="image" placeholder="URL da imagem (opcional)">
+    <button type="submit">Adicionar Post</button>
+  </form>
+
+  <!-- Lista de posts -->
+  <div id="posts"></div>
+</main>
+
+<script>
+const postForm = document.getElementById('postForm');
+const postsContainer = document.getElementById('posts');
+
+function loadPosts() {
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  postsContainer.innerHTML = '';
+  posts.forEach((post, index) => {
+    const div = document.createElement('div');
+    div.className = 'post';
+    div.innerHTML = `
+      <h2>${post.title}</h2>
+      <p>${post.content}</p>
+      ${post.image ? `<img src="${post.image}" alt="Imagem do post">` : ''}
+      <button onclick="editPost(${index})">Editar</button>
+      <button onclick="deletePost(${index})">Excluir</button>
+      <div class="comments">
+        <h3>Comentários</h3>
+        ${post.comments.map((c,i) => `<p>${c} <button onclick="deleteComment(${index},${i})">x</button></p>`).join('')}
+        <input type="text" id="comment-${index}" placeholder="Adicionar comentário">
+        <button onclick="addComment(${index})">Comentar</button>
+      </div>
+    `;
+    postsContainer.appendChild(div);
+  });
+}
+
+function savePosts(posts) {
+  localStorage.setItem('blogPosts', JSON.stringify(posts));
+}
+
+postForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  const content = document.getElementById('content').value;
+  const image = document.getElementById('image').value;
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  posts.push({ title, content, image, comments: [] });
+  savePosts(posts);
+  postForm.reset();
+  loadPosts();
+});
+
+function deletePost(index) {
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  posts.splice(index, 1);
+  savePosts(posts);
+  loadPosts();
+}
+
+function editPost(index) {
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  const post = posts[index];
+  const newTitle = prompt('Editar título:', post.title);
+  const newContent = prompt('Editar conteúdo:', post.content);
+  const newImage = prompt('Editar URL da imagem:', post.image);
+  if(newTitle !== null) post.title = newTitle;
+  if(newContent !== null) post.content = newContent;
+  if(newImage !== null) post.image = newImage;
+  savePosts(posts);
+  loadPosts();
+}
+
+function addComment(postIndex) {
+  const input = document.getElementById(`comment-${postIndex}`);
+  const comment = input.value.trim();
+  if(comment === '') return;
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  posts[postIndex].comments.push(comment);
+  savePosts(posts);
+  input.value = '';
+  loadPosts();
+}
+
+function deleteComment(postIndex, commentIndex) {
+  const posts = JSON.parse(localStorage.getItem('blogPosts')) || [];
+  posts[postIndex].comments.splice(commentIndex, 1);
+  savePosts(posts);
+  loadPosts();
+}
+
+// Inicializa posts
+loadPosts();
+</script>
+
+</body>
+</html>
